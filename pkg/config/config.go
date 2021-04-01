@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-const YamlConfigPath = "configs/configs.yml"
+const YamlConfigPath = "configs/config.yml"
 
 type Config struct {
 	TelegramToken  string `yaml:"telegram_token"`
