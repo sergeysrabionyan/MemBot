@@ -1,4 +1,4 @@
-package config
+package telegram
 
 const (
 	SendPhotoUrl   = "/sendPhoto"
