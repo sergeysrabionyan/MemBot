@@ -21,26 +21,29 @@ func main() {
 	}
 	client := telegram.NewClient(Config.TelegramBotUrl + Config.TelegramToken)
 	offset := 0
+
 	for {
 		updates, err := client.GetUpdates(offset)
 		if err != nil {
 			log.Println(err)
-			return
+			continue
 		}
 		for _, update := range updates {
 			offset = update.Id + 1
 			// Todo подумать над механизмом распознавания команд, текущая реализация - мусор
 			if strings.Contains(update.Message.Text, "/mem") {
-				memName := strings.Trim(strings.Trim(update.Message.Text, "/mem"), " ")
+				memName := strings.TrimSpace(strings.Trim(update.Message.Text, "/mem"))
 				go func(memName string, update domain.Update) {
 					url, err := findMemUrl(memName)
 					if err != nil {
 						fmt.Println(err)
+						return
 					}
 					fmt.Println("Идет отправка изображения")
 					err = client.SendImage(update.Message.Chat.ChatId, url)
 					if err != nil {
 						fmt.Println(err)
+						return
 					}
 				}(memName, update)
 			}
@@ -63,7 +66,7 @@ func findMemUrl(name string) (string, error) {
 		return "", err
 	}
 	if imageUrl == "" {
-		return "", errors.New("Не найдено изображение")
+		return "", errors.New("не найдено изображение")
 	}
 	return imageUrl, nil
 }
