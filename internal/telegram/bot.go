@@ -4,7 +4,10 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"sync"
 )
+
+var wg = &sync.WaitGroup{}
 
 type Bot struct {
 	Client *Client
@@ -17,8 +20,8 @@ func (b *Bot) Start(ctx context.Context) {
 			log.Fatal(err)
 		}
 	}()
-	// Todo в планах добавить ожидание завершения всех рутин/операций
 	<-ctx.Done()
+	wg.Wait()
 }
 
 func InitBot(client *Client) *Bot {
