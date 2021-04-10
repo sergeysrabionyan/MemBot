@@ -26,13 +26,14 @@ func main() {
 		updates, err := client.GetUpdates(offset)
 		if err != nil {
 			log.Println(err)
+			//TODO сюда нужно добавить какое-то оповещение что не удалось загрузить мем
 			continue
 		}
 		for _, update := range updates {
 			offset = update.Id + 1
 			// Todo подумать над механизмом распознавания команд, текущая реализация - мусор
 			if strings.Contains(update.Message.Text, "/mem") {
-				memName := strings.TrimSpace(strings.Trim(update.Message.Text, "/mem"))
+				memName := strings.TrimSpace(strings.Replace(update.Message.Text, "/mem", "", -1))
 				go func(memName string, update domain.Update) {
 					url, err := findMemUrl(memName)
 					if err != nil {
