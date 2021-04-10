@@ -2,6 +2,8 @@ package parser
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
 	"math/rand"
@@ -108,6 +110,25 @@ func parseImages(x float64, y float64, urlChan chan<- string, url string) {
 	defer waitGroup.Done()
 	imageUrl, _ := parseImage(x, y, url)
 	urlChan <- imageUrl
+}
+
+func FindMemUrl(name string) (string, error) {
+	imageUrl, err := GetRandomImageUrl(name)
+	count := 0
+	for imageUrl == "" && count < 10 {
+		imageUrl, err = GetRandomImageUrl(name)
+		count++
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	if err != nil {
+		return "", err
+	}
+	if imageUrl == "" {
+		return "", errors.New("не найдено изображение")
+	}
+	return imageUrl, nil
 }
 
 func getImageParseStartCoordinates() (float64, float64) {

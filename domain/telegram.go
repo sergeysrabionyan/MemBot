@@ -27,3 +27,7 @@ type Photo struct {
 	ChatId int    `json:"chat_id"`
 	Photo  string `json:"photo"`
 }
+
+type WebhookReqBody struct {
+	Message Message `json:"message"`
+}

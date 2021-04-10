@@ -3,10 +3,13 @@ package telegram
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"telegramBot/domain"
+	"telegramBot/pkg/parser"
 )
 
 type Client struct {
@@ -46,6 +49,32 @@ func (c Client) SendImage(chatId int, imageUrl string) error {
 	}
 	return nil
 }
+
+func (c *Client) AddHandler(res http.ResponseWriter, req *http.Request) {
+	body := &domain.WebhookReqBody{}
+	if err := json.NewDecoder(req.Body).Decode(body); err != nil {
+		fmt.Println("ошибка при декодировании сообщения", err)
+		return
+	}
+	// отрефакторить
+	if strings.Contains(body.Message.Text, "/mem") {
+		memName := strings.TrimSpace(strings.Trim(body.Message.Text, "/mem"))
+		go func(memName string, body *domain.WebhookReqBody) {
+			url, err := parser.FindMemUrl(memName)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			fmt.Println("Идет отправка изображения")
+			err = c.SendImage(body.Message.Chat.ChatId, url)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}(memName, body)
+	}
+}
+
 func NewClient(botUrl string) *Client {
 	return &Client{BotUrl: botUrl}
 }
