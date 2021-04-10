@@ -2,10 +2,11 @@ package parser
 
 import (
 	"context"
-	"fmt"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/device"
+	"math/rand"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -43,10 +44,14 @@ func GetRandomImageUrl(word string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//Todo реализовать алгоритм вычисления рандомных координат картинки
-	randomX := 115.00
-	randomY := 295.00
-	return parseImage(randomX, randomY, searchUrl)
+	x, y := getRandomCoordinates()
+	return parseImage(x, y, searchUrl)
+}
+
+func getRandomCoordinates() (float64, float64) {
+	x := 115 + (150 * rand.Intn(4))
+	y := 295 + (150 * rand.Intn(4))
+	return float64(x), float64(y)
 }
 
 func prepareSearchUrl(word string) (string, error) {
@@ -61,7 +66,8 @@ func prepareSearchUrl(word string) (string, error) {
 	parameters.Add("q", word+" "+"мем")
 	parameters.Add("tbm", "isch")
 	parameters.Add("sclient", "img")
-	parameters.Add("start", "0")
+	//TODO заменить номер страницы на динамичный параметр
+	parameters.Add("start", strconv.Itoa(rand.Intn(5)))
 	parameters.Add("source", "lnms")
 	Url.RawQuery = parameters.Encode()
 
@@ -83,13 +89,19 @@ func parseImage(x float64, y float64, url string) (string, error) {
 		chromedp.Evaluate(`let ele = document.elementFromPoint(1507, 305); ele ? ele.getAttribute('src') : ''`, &capturedUrl),
 	)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	if strings.Contains(capturedUrl, "data:image/") {
 		return "", nil
 	}
 	return capturedUrl, nil
+}
+
+func validateUrl(url string) string {
+	if strings.Contains(url, "data:image/") {
+		return ""
+	}
+	return url
 }
 
 func parseImages(x float64, y float64, urlChan chan<- string, url string) {

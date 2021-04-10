@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strings"
+	"telegramBot/domain"
 	"telegramBot/internal/telegram"
 	"telegramBot/pkg/config"
 	"telegramBot/pkg/parser"
@@ -17,39 +19,51 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	botUrl := Config.TelegramBotUrl + Config.TelegramToken
+	client := telegram.NewClient(Config.TelegramBotUrl + Config.TelegramToken)
 	offset := 0
 	for {
-		updates, err := telegram.GetUpdates(botUrl, offset)
+		updates, err := client.GetUpdates(offset)
 		if err != nil {
 			log.Println(err)
+			return
 		}
 		for _, update := range updates {
+			offset = update.Id + 1
+			// Todo подумать над механизмом распознавания команд, текущая реализация - мусор
 			if strings.Contains(update.Message.Text, "/mem") {
 				memName := strings.Trim(strings.Trim(update.Message.Text, "/mem"), " ")
-				err = findAndSendMem(botUrl, memName, update.Message.Chat.ChatId)
+				go func(memName string, update domain.Update) {
+					url, err := findMemUrl(memName)
+					if err != nil {
+						fmt.Println(err)
+					}
+					fmt.Println("Идет отправка изображения")
+					err = client.SendImage(update.Message.Chat.ChatId, url)
+					if err != nil {
+						fmt.Println(err)
+					}
+				}(memName, update)
 			}
-			if err != nil {
-				log.Println(err)
-			}
-			offset = update.Id + 1
 		}
 		fmt.Println(updates)
 	}
 }
 
-func findAndSendMem(botUrl string, name string, chatId int) error {
+func findMemUrl(name string) (string, error) {
 	imageUrl, err := parser.GetRandomImageUrl(name)
+	count := 0
+	for imageUrl == "" && count < 10 {
+		imageUrl, err = parser.GetRandomImageUrl(name)
+		count++
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 	if err != nil {
-		fmt.Println(err)
+		return "", err
 	}
 	if imageUrl == "" {
-		return nil
+		return "", errors.New("Не найдено изображение")
 	}
-	fmt.Println("Идет отправка изображения")
-	err = telegram.SendImage(chatId, imageUrl, botUrl)
-	if err != nil {
-		return err
-	}
-	return nil
+	return imageUrl, nil
 }
