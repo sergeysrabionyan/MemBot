@@ -25,10 +25,10 @@ func (b *Bot) StartListen() {
 		}
 	}()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, os.Interrupt)
 
-	<-c
+	<-exit
 	err := b.stopListen(server)
 	if err != nil {
 		fmt.Println(err)
@@ -39,7 +39,6 @@ func (b *Bot) StartListen() {
 func (b *Bot) stopListen(server *http.Server) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 	err := server.Shutdown(ctx)
 	if err != nil {
 		return err

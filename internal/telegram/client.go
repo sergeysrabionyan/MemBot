@@ -59,7 +59,7 @@ func (c *Client) AddHandler(res http.ResponseWriter, req *http.Request) {
 	// отрефакторить
 	if strings.Contains(body.Message.Text, "/mem") {
 		wg.Add(1)
-		memName := strings.TrimSpace(strings.Trim(body.Message.Text, "/mem"))
+		memName := trimMessage(body.Message.Text, "/mem")
 		go func(memName string, body *domain.WebhookReqBody) {
 			defer wg.Done()
 			url, err := parser.FindMemUrl(memName)
@@ -79,4 +79,8 @@ func (c *Client) AddHandler(res http.ResponseWriter, req *http.Request) {
 
 func NewClient(botUrl string) *Client {
 	return &Client{BotUrl: botUrl}
+}
+
+func trimMessage(message string, commandName string) string {
+	return strings.TrimSpace(strings.TrimLeft(message, commandName))
 }
