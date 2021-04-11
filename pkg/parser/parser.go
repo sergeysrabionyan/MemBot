@@ -99,13 +99,6 @@ func parseImage(x float64, y float64, url string) (string, error) {
 	return capturedUrl, nil
 }
 
-func validateUrl(url string) string {
-	if strings.Contains(url, "data:image/") {
-		return ""
-	}
-	return url
-}
-
 func parseImages(x float64, y float64, urlChan chan<- string, url string) {
 	defer waitGroup.Done()
 	imageUrl, _ := parseImage(x, y, url)
