@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const DefaultHttpPort = ":3000"
+
 var wg = &sync.WaitGroup{}
 
 type Bot struct {
@@ -17,7 +19,7 @@ type Bot struct {
 }
 
 func (b *Bot) StartListen() {
-	server := &http.Server{Addr: ":3000", Handler: http.HandlerFunc(b.Client.AddHandler)}
+	server := &http.Server{Addr: DefaultHttpPort, Handler: http.HandlerFunc(b.Client.AddHandler)}
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
@@ -25,7 +27,7 @@ func (b *Bot) StartListen() {
 		}
 	}()
 
-	exit := make(chan os.Signal, 1)
+	exit := make(chan os.Signal)
 	signal.Notify(exit, os.Interrupt)
 
 	<-exit
